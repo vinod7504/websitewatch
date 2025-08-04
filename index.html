@@ -26,12 +26,35 @@
       display: none;
       border-radius: 8px;
     }
+
+    form {
+      margin-top: 20px;
+    }
+
+    input[type="email"] {
+      padding: 10px;
+      width: 250px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Welcome to Vinod's Website</h1>
     <p>This website uses AI agents and n8n automation.</p>
+
+    <form id="emailForm">
+      <input type="email" id="emailInput" placeholder="Enter your email to receive offers" required />
+      <button type="submit">Submit</button>
+    </form>
+
     <div id="promo" class="promo"></div>
   </div>
 
@@ -49,7 +72,11 @@
       }
     }
 
-    async function trackVisit(ip) {
+    document.getElementById("emailForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("emailInput").value;
+      const ip = await getIP();
+
       try {
         const res = await fetch(N8N_WEBHOOK, {
           method: "POST",
@@ -58,26 +85,22 @@
           },
           body: JSON.stringify({
             ip,
+            email,
             url: window.location.href,
             visitedAt: new Date().toISOString()
           })
         });
 
         const data = await res.json();
-        if (data.recent === true) {
+        if (data.recent === true || data.success === true) {
           document.getElementById("promo").innerText =
-            "🎉 Welcome back! Here's a special offer just for you.";
+            "🎉 Thank you! A special offer has been sent to " + email;
           document.getElementById("promo").style.display = "block";
         }
       } catch (err) {
         console.error("Webhook error", err);
       }
-    }
-
-    (async function () {
-      const ip = await getIP();
-      await trackVisit(ip);
-    })();
+    });
   </script>
 </body>
 </html>
