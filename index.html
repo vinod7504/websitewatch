@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visitor Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    .container {
+      padding: 50px;
+    }
+
+    .promo {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #d1e7dd;
+      border: 1px solid #badbcc;
+      color: #0f5132;
+      display: none;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to Vinod's Website</h1>
+    <p>This website uses AI agents and n8n automation.</p>
+    <div id="promo" class="promo"></div>
+  </div>
+
+  <script>
+    const N8N_WEBHOOK = "https://vinodb505.app.n8n.cloud/webhook/watch";
+
+    async function getIP() {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        return data.ip;
+      } catch (err) {
+        console.error("IP fetch failed", err);
+        return "unknown";
+      }
+    }
+
+    async function trackVisit(ip) {
+      try {
+        const res = await fetch(N8N_WEBHOOK, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            ip,
+            url: window.location.href,
+            visitedAt: new Date().toISOString()
+          })
+        });
+
+        const data = await res.json();
+        if (data.recent === true) {
+          document.getElementById("promo").innerText =
+            "🎉 Welcome back! Here's a special offer just for you.";
+          document.getElementById("promo").style.display = "block";
+        }
+      } catch (err) {
+        console.error("Webhook error", err);
+      }
+    }
+
+    (async function () {
+      const ip = await getIP();
+      await trackVisit(ip);
+    })();
+  </script>
+</body>
+</html>
